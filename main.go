@@ -14,6 +14,7 @@ import (
 	"github.com/howeyc/fsnotify"
 	"errors"
 	"github.com/artpar/gisio/types"
+	"encoding/json"
 )
 
 const (
@@ -91,34 +92,68 @@ func list(w http.ResponseWriter, r *http.Request) {
 }
 
 type LoadedFile struct {
-	data         [][]string
-	typeInfo     map[string]types.EntityType
-	columnsCount int
-	rowCount     int
+	data [][]string
+	*FileInfo
 }
 
-func DetectColumnTypes(file LoadedFile) {
-	file.typeInfo = make(map[string]types.EntityType)
-	file.rowCount = len(file.data)
-	if file.rowCount == 0 {
+type FileInfo struct {
+	Filename    string  `json:"Filename"`
+	ColumnCount int  `json:"ColumnCount"`
+	RowCount    int  `json:"RowCount"`
+	TypeInfo    []types.EntityType `json:"TypeInfo"`
+}
+
+func (file LoadedFile) DetectColumnTypes() {
+
+	file.RowCount = len(file.data)
+	if file.RowCount == 0 {
+		log.Printf("Row count is zero")
 		return
 	}
-	file.columnsCount = len(file.data[0])
-	for i := 0; i < file.columnsCount; i++ {
+	log.Printf("Number of rows : %d\n", file.RowCount)
+	file.ColumnCount = len(file.data[0])
+	temp1 := make([]types.EntityType, file.ColumnCount)
+	temp2 := make([]types.EntityType, file.ColumnCount)
+
+	unDeductedCount1, unDeductedCount2 := 0, 0
+	for i := 0; i < file.ColumnCount; i++ {
 		colValues := make([]string, 10)
-		for j := 0; j < file.rowCount && j < 10; j++ {
+		for j := 0; j < file.RowCount && j < 10; j++ {
 			colValues = append(colValues, file.data[j][i])
 		}
-		typeInfo, err := types.DetectType(colValues)
+		var err error
+		temp1[i], err = types.DetectType(colValues)
 		if err != nil {
+			unDeductedCount1 += 1
 			log.Printf("Could not deduce type - %v", colValues)
 		}
-		file.typeInfo[i] = typeInfo
 	}
+
+	for i := 0; i < file.ColumnCount; i++ {
+		colValues := make([]string, 10)
+		for j := 1; j < file.RowCount && j < 11; j++ {
+			colValues = append(colValues, file.data[j][i])
+		}
+		var err error
+		temp2[i], err = types.DetectType(colValues)
+		if err != nil {
+			unDeductedCount2 += 1
+			log.Printf("Could not deduce type - %v", colValues)
+		}
+	}
+
+	if unDeductedCount1 < unDeductedCount2 {
+		log.Printf("Without headers")
+		file.FileInfo.TypeInfo = temp1
+	} else {
+		log.Printf("With headers")
+		file.FileInfo.TypeInfo = temp2
+	}
+	log.Printf("FileInfo: %v", file.FileInfo)
 }
 
-func ProcessLoadedFile(file LoadedFile) {
-	DetectColumnTypes(file)
+func (file LoadedFile) ProcessLoadedFile() {
+	file.DetectColumnTypes()
 }
 
 var dataMap map[string]LoadedFile
@@ -142,33 +177,54 @@ func LoadData(filename string) (error) {
 	if (len(data) < 0) {
 		return errors.New(fmt.Sprintf("Data is too less in [%s]. Need atleast 4 rows", dirName))
 	}
-	dataMap[filename] = NewLoadedFile(data)
+	dataMap[filename] = NewLoadedFile(filename, data)
 	return nil
 }
 
-func NewLoadedFile(data [][]string) LoadedFile {
-	loadedFile := LoadedFile{data: data}
-	go ProcessLoadedFile(loadedFile)
+func NewLoadedFile(filename string, data [][]string) LoadedFile {
+	t := make([]types.EntityType, 0)
+	loadedFile := LoadedFile{data: data,
+		FileInfo: &FileInfo{
+			Filename: filename,
+			TypeInfo: t,
+		},
+	}
+	log.Printf("Process loaded file - %s", filename)
+	loadedFile.ProcessLoadedFile()
 	return loadedFile
 }
 
-func info(w http.ResponseWriter, r *http.Request)
+func SendJson(w http.ResponseWriter, d interface{}) {
+	by, err := json.Marshal(d)
+	CheckErr(err, fmt.Sprintf("Failed to write value as json - %v", err))
+	w.Write(by)
+}
+
+func info(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	filename, _ := vars["filename"]
+	log.Printf("Get info for file - %s", filename)
+	f, ok := dataMap[filename]
+	if !ok {
+		log.Printf("Load file info - %s\n", filename)
+		err := LoadData(filename)
+		CheckErr(err, "Load failed")
+	}
+	f, _ = dataMap[filename]
+	b, _ := json.Marshal(f)
+	log.Printf("Data - %s", string(b))
+	SendJson(w, &f)
+}
 
 func index(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	filename, _ := vars["filename"]
-	LoadData(filename)
-	data := dataMap[filename].data
-	numberOfRows := len(data)
-	numberOfColumns := len(data[0])
-	fmt.Printf("Rows: %d, Cols: %d", numberOfRows, numberOfColumns)
+	err := LoadData(filename)
+	CheckErr(err, "Load failed")
+	fmt.Printf("Rows: %d, Cols: %d", dataMap[filename].RowCount, dataMap[filename].ColumnCount)
 	// Print2D(data)
 
-	con := make(map[string]interface{})
-	con["Filename"] = filename
-	con["Rows"] = numberOfRows
-	con["Cols"] = numberOfColumns
-	Render("data", w, con)
+	Render("data", w, dataMap[filename].FileInfo)
 }
 
 func Print2D(data [][]string) {

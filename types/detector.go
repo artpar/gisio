@@ -11,6 +11,26 @@ import (
 
 type EntityType int
 
+func (t EntityType) String() string {
+	switch t {
+	case time:
+		return "time"
+	case ipaddress:
+		return "ipaddress"
+	case money:
+		return "money"
+	case number:
+		return "number"
+	case none:
+		return "none"
+	}
+	return "failed-to-detect"
+}
+
+func (t EntityType) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + t.String() + "\""), nil
+}
+
 const (
 	time EntityType = iota
 	ipaddress
