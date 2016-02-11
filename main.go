@@ -100,11 +100,19 @@ type FileInfo struct {
 	Filename    string  `json:"Filename"`
 	ColumnCount int  `json:"ColumnCount"`
 	RowCount    int  `json:"RowCount"`
-	TypeInfo    []types.EntityType `json:"TypeInfo"`
+	HasHeaders  bool
+	ColumnInfo  []ColumnInfo
+}
+
+type ColumnInfo struct {
+	TypeInfo           types.EntityType
+	IsEnum             bool
+	DistinctValueCount int
+	ValueCounts        map[string]int
+	Percent            int
 }
 
 func (file LoadedFile) DetectColumnTypes() {
-
 	file.RowCount = len(file.data)
 	if file.RowCount == 0 {
 		log.Printf("Row count is zero")
@@ -112,43 +120,62 @@ func (file LoadedFile) DetectColumnTypes() {
 	}
 	log.Printf("Number of rows : %d\n", file.RowCount)
 	file.ColumnCount = len(file.data[0])
-	temp1 := make([]types.EntityType, file.ColumnCount)
-	temp2 := make([]types.EntityType, file.ColumnCount)
+	file.FileInfo.ColumnInfo = make([]ColumnInfo, file.ColumnCount)
+	enumThreshHold := (file.RowCount * 15) / 100
 
-	unDeductedCount1, unDeductedCount2 := 0, 0
+	hasHeaders := false
 	for i := 0; i < file.ColumnCount; i++ {
-		colValues := make([]string, 10)
+		thisColumnHeaders := false
+		colValues := make([]string, 0)
 		for j := 0; j < file.RowCount && j < 10; j++ {
 			colValues = append(colValues, file.data[j][i])
 		}
+		log.Printf("Values for detection 1 - %s", colValues)
 		var err error
-		temp1[i], err = types.DetectType(colValues)
+		temp1, thisColumnHeaders, err := types.DetectType(colValues)
 		if err != nil {
-			unDeductedCount1 += 1
-			log.Printf("Could not deduce type - %v", colValues)
+			log.Printf("Could not deduce type 1 - %v - %v", colValues, err)
+		}
+		if thisColumnHeaders {
+			hasHeaders = true
+		}
+
+		distinctCount := 0
+		counted := make(map[string]int, 0)
+		isEnum := true
+		startAt := 0
+		if thisColumnHeaders {
+			startAt = 1
+		}
+		for j := startAt; j < file.RowCount; j++ {
+			_, ok := counted[file.data[j][i]]
+			if ok {
+				counted[file.data[j][i]] = counted[file.data[j][i]] + 1
+			} else {
+				distinctCount = distinctCount + 1
+				counted[file.data[j][i]] = 1
+			}
+
+			if distinctCount > enumThreshHold && isEnum {
+				isEnum = false
+			}
+
+		}
+
+		if !isEnum {
+			counted = make(map[string]int, 0)
+		}
+
+		file.FileInfo.ColumnInfo[i] = ColumnInfo{
+			TypeInfo:temp1,
+			IsEnum: isEnum,
+			DistinctValueCount: distinctCount,
+			ValueCounts: counted,
+			Percent: (distinctCount * 100) / file.RowCount,
 		}
 	}
 
-	for i := 0; i < file.ColumnCount; i++ {
-		colValues := make([]string, 10)
-		for j := 1; j < file.RowCount && j < 11; j++ {
-			colValues = append(colValues, file.data[j][i])
-		}
-		var err error
-		temp2[i], err = types.DetectType(colValues)
-		if err != nil {
-			unDeductedCount2 += 1
-			log.Printf("Could not deduce type - %v", colValues)
-		}
-	}
-
-	if unDeductedCount1 < unDeductedCount2 {
-		log.Printf("Without headers")
-		file.FileInfo.TypeInfo = temp1
-	} else {
-		log.Printf("With headers")
-		file.FileInfo.TypeInfo = temp2
-	}
+	file.FileInfo.HasHeaders = hasHeaders
 	log.Printf("FileInfo: %v", file.FileInfo)
 }
 
@@ -182,11 +209,11 @@ func LoadData(filename string) (error) {
 }
 
 func NewLoadedFile(filename string, data [][]string) LoadedFile {
-	t := make([]types.EntityType, 0)
+	t := make([]ColumnInfo, 0)
 	loadedFile := LoadedFile{data: data,
 		FileInfo: &FileInfo{
 			Filename: filename,
-			TypeInfo: t,
+			ColumnInfo: t,
 		},
 	}
 	log.Printf("Process loaded file - %s", filename)

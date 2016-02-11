@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"errors"
 	"fmt"
+	"log"
 )
 
 type EntityType int
@@ -39,6 +40,9 @@ const (
 	none
 )
 
+var (
+	order = []EntityType{time, ipaddress, money, number}
+)
 var detector map[EntityType]func(string) bool
 
 func init() {
@@ -63,20 +67,25 @@ func init() {
 	}
 	detector[number] = func(d string) bool {
 		_, err := strconv.ParseFloat(d, 64)
-		if err != nil {
+		if err == nil {
 			return true
 		}
+		log.Printf("Parse %v as float - %v", d, err)
 		_, err = strconv.ParseInt(d, 10, 64)
-		if err != nil {
+		if err == nil {
 			return true
 		}
+		log.Printf("Parse %v as int - %v", d, err)
 		return false
 	}
 }
 
-func DetectType(d []string) (EntityType, error) {
+func DetectType(d []string) (EntityType, bool, error) {
 	unidentified := make([]string, 0)
-	for typeInfo, detect := range detector {
+	thisHeaders := false
+	for _, typeInfo := range order {
+		detect := detector[typeInfo]
+		log.Printf("Try 1 %s as %v", d, typeInfo)
 		ok := true
 		for _, s := range d {
 			thisOk := detect(s)
@@ -87,8 +96,27 @@ func DetectType(d []string) (EntityType, error) {
 			}
 		}
 		if ok {
-			return typeInfo, nil
+			return typeInfo, thisHeaders, nil
 		}
 	}
-	return none, errors.New(fmt.Sprintf("Failed to identify - %v", unidentified))
+
+	thisHeaders = true
+	for _, typeInfo := range order {
+		detect := detector[typeInfo]
+		log.Printf("Try 2 %s as %v", d[1:], typeInfo)
+		ok := true
+		for _, s := range d[1:] {
+			thisOk := detect(s)
+			if !thisOk {
+				unidentified = append(unidentified, s)
+				ok = false
+				break
+			}
+		}
+		if ok {
+			return typeInfo, thisHeaders, nil
+		}
+	}
+
+	return none, true, errors.New(fmt.Sprintf("Failed to identify - %v", unidentified))
 }
