@@ -15,6 +15,7 @@ import (
 	"errors"
 	"github.com/artpar/gisio/types"
 	"encoding/json"
+	"strconv"
 )
 
 const (
@@ -110,6 +111,7 @@ type ColumnInfo struct {
 	DistinctValueCount int
 	ValueCounts        map[string]int
 	Percent            int
+	ColumnName         string
 }
 
 func (file LoadedFile) DetectColumnTypes() {
@@ -165,6 +167,10 @@ func (file LoadedFile) DetectColumnTypes() {
 		if !isEnum {
 			counted = make(map[string]int, 0)
 		}
+		columnName := "column_" + strconv.Itoa(i)
+		if thisColumnHeaders {
+			columnName = file.data[0][i]
+		}
 
 		file.FileInfo.ColumnInfo[i] = ColumnInfo{
 			TypeInfo:temp1,
@@ -172,6 +178,7 @@ func (file LoadedFile) DetectColumnTypes() {
 			DistinctValueCount: distinctCount,
 			ValueCounts: counted,
 			Percent: (distinctCount * 100) / file.RowCount,
+			ColumnName: columnName,
 		}
 	}
 
