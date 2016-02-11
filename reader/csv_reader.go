@@ -15,7 +15,8 @@ func NewCsvReader(filename string) (csvReader, error) {
 	if err != nil {
 		return csvReader{}, err
 	}
-	return csvReader{filename: filename, reader: csv.NewReader(file)}
+	reader := csv.NewReader(file)
+	return csvReader{filename: filename, reader: reader}, nil
 }
 
 func (c csvReader) ReadRow() ([]string, error) {
