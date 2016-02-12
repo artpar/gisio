@@ -5,19 +5,53 @@
     <meta charset="UTF-8">
     <title>{{.Filename}}</title>
     {{template "header"}}
+    <script>
+        var fileName = "{{.Filename}}";
+        var baseUrl = "/data/" + fileName + "/";
+    </script>
+    <style type="text/css">
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+
+        .bar {
+            fill: steelblue;
+        }
+
+        .x.axis path {
+            display: none;
+        }
+    </style>
 </head>
 <body>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-2 well ">
-            Rows: {{ .RowCount }} <br>
-            Cols: {{ .ColumnCount }}
+        <div class="col-md-2 well">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>Columns</h3>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12" id="columns"></div>
+            </div>
+            <div class="row">
+                <a href="info" target="_blank" style="font-size: 8px;">Info</a>
+            </div>
+        </div>
+        <div class="col-md-10">
+            <div id="chart">
+                <div id="pies"></div>
+            </div>
         </div>
     </div>
 </div>
 </body>
-<script>
-
-</script>
+<script src="/static/script/pie.js"></script>
+<script src="/static/script/bar.js"></script>
+<script src="/static/script/app.js"></script>
 </html>
 {{end}}
