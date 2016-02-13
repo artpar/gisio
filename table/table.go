@@ -4,6 +4,7 @@ import (
 	"github.com/artpar/gisio/types"
 	"strconv"
 	"log"
+	"math"
 )
 
 type LoadedFile struct {
@@ -23,13 +24,17 @@ type FileInfo struct {
 	ColumnInfo  []ColumnInfo
 }
 
-type ColumnInfo struct {
-	TypeInfo           types.EntityType
-	IsEnum             bool
+type ColumnStats struct {
 	DistinctValueCount int
 	ValueCounts        map[string]int
 	Percent            int
-	ColumnName         string
+}
+
+type ColumnInfo struct {
+	TypeInfo   types.EntityType
+	IsEnum     bool
+	ColumnName string
+	ColumnStats
 }
 
 func (file LoadedFile) ProcessLoadedFile() {
@@ -58,7 +63,7 @@ func (file LoadedFile) DetectColumnTypes() {
 	log.Printf("Number of rows : %d\n", file.RowCount)
 	file.ColumnCount = len(file.data[0])
 	file.FileInfo.ColumnInfo = make([]ColumnInfo, file.ColumnCount)
-	enumThreshHold := (file.RowCount * 15) / 100
+	enumThreshHold := int(math.Min(float64((file.RowCount * 10) / 100), 70))
 
 	hasHeaders := false
 	for i := 0; i < file.ColumnCount; i++ {
@@ -110,10 +115,12 @@ func (file LoadedFile) DetectColumnTypes() {
 		file.FileInfo.ColumnInfo[i] = ColumnInfo{
 			TypeInfo:temp1,
 			IsEnum: isEnum,
-			DistinctValueCount: distinctCount,
-			ValueCounts: counted,
-			Percent: (distinctCount * 100) / file.RowCount,
 			ColumnName: columnName,
+			ColumnStats: ColumnStats{
+				DistinctValueCount: distinctCount,
+				ValueCounts: counted,
+				Percent: (distinctCount * 100) / file.RowCount,
+			},
 		}
 	}
 

@@ -18,6 +18,10 @@ func (t EntityType) String() string {
 	switch t {
 	case Time:
 		return "time"
+	case Date:
+		return "date"
+	case DateTime:
+		return "datetime"
 	case Ipaddress:
 		return "ipaddress"
 	case Money:
@@ -26,8 +30,12 @@ func (t EntityType) String() string {
 		return "number"
 	case None:
 		return "none"
+	case Boolean:
+		return "boolean"
+	case Location:
+		return "location"
 	}
-	return "failed-to-detect"
+	return "name-not-set"
 }
 
 func (t EntityType) MarshalJSON() ([]byte, error) {
@@ -35,15 +43,19 @@ func (t EntityType) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	Time EntityType = iota
+	DateTime EntityType = iota
+	Time
+	Date
 	Ipaddress
 	Money
 	Number
+	Boolean
+	Location
 	None
 )
 
 var (
-	order = []EntityType{Time, Ipaddress, Number, Money}
+	order = []EntityType{Boolean, DateTime, Date, Time, Ipaddress, Number, Money}
 )
 var detector map[EntityType]func(string) (bool, interface{})
 
@@ -56,6 +68,22 @@ func init() {
 		}
 		return false, time.Now()
 	}
+	detector[Date] = func(d string) (bool, interface{}) {
+		t, _, err := mtime.GetDate(d)
+		if err == nil {
+			return true, t
+		}
+		return false, time.Now()
+	}
+
+	detector[DateTime] = func(d string) (bool, interface{}) {
+		t, _, err := mtime.GetDateTime(d)
+		if err == nil {
+			return true, t
+		}
+		return false, time.Now()
+	}
+
 	detector[Ipaddress] = func(d string) (bool, interface{}) {
 		s := net.ParseIP(d)
 		if s != nil {
@@ -67,6 +95,14 @@ func init() {
 		r := regexp.MustCompile("^([a-zA-Z]{0,3}\\.?)?[0-9]+\\.[0-9]{0,2}([a-zA-Z]{0,3})?")
 		return r.MatchString(d), d
 	}
+	detector[Boolean] = func(d string) (bool, interface{}) {
+		r, err := strconv.ParseBool(d)
+		if err != nil {
+			return false, false
+		}
+		return true, r
+	}
+
 	detector[Number] = func(d string) (bool, interface{}) {
 		v, err := strconv.ParseFloat(d, 64)
 		if err == nil {
@@ -155,23 +191,22 @@ func DetectType(d []string) (EntityType, bool, error) {
 	return None, thisHeaders, errors.New(fmt.Sprintf("Failed to identify - %v", unidentified))
 }
 
-var nameMap = map[string]EntityType{
-	"price": Money,
-	"income": Money,
-	"amount": Money,
-	"wage": Money,
-	"cost":Money,
+var nameMap = map[EntityType][]string{
+	Money: []string{"price", "income", "amount", "wage", "cost", "sale", "profit", "asset", "marketvalue"},
+	Location: []string{"country", "city", "state", "pincode", "zipcode", "address"},
 }
 
 func columnTypeFromName(name string) EntityType {
-	for n, typ := range nameMap {
-		if strings.HasSuffix(name, n) {
-			log.Printf("Selecting type %s because of Suffix %s in %s", typ.String(), n, name)
-			return typ
-		}
-		if strings.HasPrefix(name, n) {
-			log.Printf("Selecting type %s because of Prefix %s in %s", typ.String(), n, name)
-			return typ
+	for typ, names := range nameMap {
+		for _, n := range names {
+			if strings.HasSuffix(name, n) {
+				log.Printf("Selecting type %s because of Suffix %s in %s", typ.String(), n, name)
+				return typ
+			}
+			if strings.HasPrefix(name, n) {
+				log.Printf("Selecting type %s because of Prefix %s in %s", typ.String(), n, name)
+				return typ
+			}
 		}
 	}
 	return None

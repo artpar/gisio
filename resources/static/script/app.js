@@ -47,9 +47,9 @@ $(document).ready(function () {
                 (function (name) {
                     container.append("text")
                         .attr("dy", ".35em")
-                        .attr("transform", "translate(40,10)")
+                        .attr("transform", "translate(30,10)")
                         .text(function (d) {
-                            return name;
+                            return name + " - count";
                         });
                 })(columnName);
 

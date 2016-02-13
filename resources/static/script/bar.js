@@ -17,15 +17,18 @@ function appendBarChartArray(data, container) {
         height = container.attr('height'),
         radius = Math.min(width, height) / 2;
 
-    var margin = {top: 10 + (height / 100), right: width / 100, bottom: 20 + (height / 100), left: leftAxisWidth + 10 + (width / 100)};
+    var margin = {top: 20 + (height / 100), right: width / 100, bottom: 20 + (height / 100), left: leftAxisWidth + 10 + (width / 100)};
     width = width - margin.left - margin.right;
     height = height - margin.top - margin.bottom;
 
     var barWidth = width / data.length;
     var barGap = (barWidth * 20) / 100;
     barWidth = barWidth - barGap;
+    var max = d3.max(data, function (d) {
+        return d[1];
+    });
 
-    var y0 = d3.scale.linear().range([height, 0]);
+    var y0 = d3.scale.linear().range([height, 0]).domain([0, max]);
     var yAxisLeft = d3.svg.axis().scale(y0)
         .orient("left").ticks(5);
 
@@ -50,9 +53,7 @@ function appendBarChartArray(data, container) {
         .attr("height", height);
 
     var scale = d3.scale.linear().range([0, height]);
-    var max = d3.max(data, function (d) {
-        return d[1];
-    });
+
     scale.domain([0, max]);
     var color = d3.scale.linear()
         .domain([0, max / 2, max])
@@ -72,7 +73,7 @@ function appendBarChartArray(data, container) {
             return scale(d[1])
         })
         .attr("transform", function (d, i) {
-            return "translate(" + ((barWidth + barGap) * (i - 1)) + "," + (height - scale(d[1])) + ")";
+            return "translate(" + ((barWidth + barGap) * (i)) + "," + (height - scale(d[1])) + ")";
         });
     container.append("g")
         .attr("transform", "translate(" + margin.left + "," + 10 + ")")
@@ -82,7 +83,7 @@ function appendBarChartArray(data, container) {
         .data(data)
         .enter().append("text")
         .attr("transform", function (d, i) {
-            return "translate(" + ((barWidth + barGap) * (i - 1)) + "," + (margin.top + height + 2) + ")rotate(45)"
+            return "translate(" + ((barWidth + barGap) * (i)) + "," + (margin.top + height + 2) + ")rotate(45)"
         })
         .style("font-size", "8px")
         .text(function (d) {
