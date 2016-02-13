@@ -83,7 +83,7 @@ function appendBarChartArray(data, container) {
         .data(data)
         .enter().append("text")
         .attr("transform", function (d, i) {
-            return "translate(" + ((barWidth + barGap) * (i)) + "," + (margin.top + height + 2) + ")rotate(45)"
+            return "translate(" + ((barWidth + barGap) * (i) + 10) + "," + (margin.top + height + 2) + ")rotate(45)"
         })
         .style("font-size", "8px")
         .text(function (d) {

@@ -2,8 +2,7 @@
  * Created by parth on 2/12/2016.
  */
 
-var pieHeight = 200, pieWidth = 200;
-
+var height = 300, width = 300;
 
 $(document).ready(function () {
     $.ajax({
@@ -22,40 +21,71 @@ $(document).ready(function () {
                 });
 
             for (var i = 0; i < data.ColumnInfo.length; i++) {
+                var keys = [
+                    data.ColumnInfo[i].TypeInfo + "&" + data.ColumnInfo[i].IsEnum.toString(),
+                    "&" + data.ColumnInfo[i].IsEnum.toString()
+                ];
 
-
-                if (!data.ColumnInfo[i].IsEnum) {
+                var f = undefined;
+                for (var x = 0; x < keys.length; x++) {
+                    var mapKey = keys[x];
+                    f = functionMap[mapKey];
+                    if (f != undefined) {
+                        break
+                    }
+                }
+                if (f == undefined) {
                     continue
                 }
+                f = f(data.ColumnInfo[i]);
 
-                var f = appendPieChartByMap;
-                var width = pieWidth, height = pieHeight;
-
-                if (data.ColumnInfo[i].DistinctValueCount > 15) {
-                    f = appendBarChart;
-                    width = width * 3;
-//                        height = height * 1;
-                }
-
-                var columnName = data.ColumnInfo[i].ColumnName;
-                var container = d3.select("#pies")
-                    .append("svg:svg")
-                    .attr('height', height)
-                    .attr('width', width)
-                    .attr('id', columnName);
-
-                (function (name) {
-                    container.append("text")
-                        .attr("dy", ".35em")
-                        .attr("transform", "translate(30,10)")
-                        .text(function (d) {
-                            return name + " - count";
-                        });
-                })(columnName);
+                var container = addContainer(f.height(height), f.width(width), f.columnName());
 
                 f(data.ColumnInfo[i].ValueCounts, container)
-
             }
         }
-    })
+    });
+
+    var functionMap = {
+        '&true': function (colInfo) {
+            var x;
+            if (colInfo.DistinctValueCount > 15) {
+                x = appendBarChart;
+                x.height = function (h) {
+                    return h;
+                };
+                x.width = function (w) {
+                    return w * 3;
+                };
+            } else {
+                x = appendPieChartByMap;
+                x.height = function (h) {
+                    return h;
+                };
+                x.width = function (w) {
+                    return w;
+                };
+            }
+            x.columnName = function () {
+                return colInfo.ColumnName
+            };
+            return x;
+        }
+    };
+
+    function addContainer(height, width, name) {
+        var container = d3.select("#pies")
+            .append("svg:svg")
+            .attr('height', height)
+            .attr('width', width)
+            .attr('id', name);
+
+        container.append("text")
+            .attr("dy", ".35em")
+            .attr("transform", "translate(30,10)")
+            .text(function (d) {
+                return name + " - count";
+            });
+        return container;
+    }
 });
