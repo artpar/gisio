@@ -70,22 +70,47 @@ $(document).ready(function () {
                 return colInfo.ColumnName
             };
             return x;
+        },
+        'number&true': function (colInfo) {
+            var x;
+            if (colInfo.DistinctValueCount < 5) {
+                x = appendPieChartByMap;
+                x.height = function (h) {
+                    return h;
+                };
+                x.width = function (w) {
+                    return w;
+                };
+            } else {
+                x = appendBarChart;
+                x.height = function (h) {
+                    return h;
+                };
+                x.width = function (w) {
+                    return w * 3;
+                };
+            }
+            x.columnName = function () {
+                return colInfo.ColumnName
+            };
+            return x;
         }
+
     };
 
     function addContainer(height, width, name) {
-        var container = d3.select("#pies")
+        var times = width / window.width;
+        console.log("times", times)
+        var col = $("<div class='col-md-" + (3 * times) + "'></div>");
+        col.attr("id", "container-" + name);
+        col.append("<span>" + name + "</span>");
+        $("#chart").append(col);
+        var container = d3.select("#container-" + name)
             .append("svg:svg")
-            .attr('height', height)
-            .attr('width', width)
+            .style('height', height)
+            .style('width', width)
             .attr('id', name);
 
-        container.append("text")
-            .attr("dy", ".35em")
-            .attr("transform", "translate(30,10)")
-            .text(function (d) {
-                return name + " - count";
-            });
         return container;
     }
 });
