@@ -8,21 +8,23 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 )
 
 type EntityType int
 
 func (t EntityType) String() string {
 	switch t {
-	case time:
+	case Time:
 		return "time"
-	case ipaddress:
+	case Ipaddress:
 		return "ipaddress"
-	case money:
+	case Money:
 		return "money"
-	case number:
+	case Number:
 		return "number"
-	case none:
+	case None:
 		return "none"
 	}
 	return "failed-to-detect"
@@ -33,51 +35,69 @@ func (t EntityType) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	time EntityType = iota
-	ipaddress
-	money
-	number
-	none
+	Time EntityType = iota
+	Ipaddress
+	Money
+	Number
+	None
 )
 
 var (
-	order = []EntityType{time, ipaddress, money, number}
+	order = []EntityType{Time, Ipaddress, Number, Money}
 )
-var detector map[EntityType]func(string) bool
+var detector map[EntityType]func(string) (bool, interface{})
 
 func init() {
-	detector = make(map[EntityType]func(string) bool)
-	detector[time] = func(d string) bool {
-		_, _, err := mtime.GetTime(d)
+	detector = make(map[EntityType]func(string) (bool, interface{}))
+	detector[Time] = func(d string) (bool, interface{}) {
+		t, _, err := mtime.GetTime(d)
 		if err == nil {
-			return true
+			return true, t
 		}
-		return false
+		return false, time.Now()
 	}
-	detector[ipaddress] = func(d string) bool {
+	detector[Ipaddress] = func(d string) (bool, interface{}) {
 		s := net.ParseIP(d)
 		if s != nil {
-			return true
+			return true, net.IP("")
 		}
-		return false
+		return false, s
 	}
-	detector[money] = func(d string) bool {
+	detector[Money] = func(d string) (bool, interface{}) {
 		r := regexp.MustCompile("^([a-zA-Z]{0,3}\\.?)?[0-9]+\\.[0-9]{0,2}([a-zA-Z]{0,3})?")
-		return r.MatchString(d)
+		return r.MatchString(d), d
 	}
-	detector[number] = func(d string) bool {
-		_, err := strconv.ParseFloat(d, 64)
+	detector[Number] = func(d string) (bool, interface{}) {
+		v, err := strconv.ParseFloat(d, 64)
 		if err == nil {
-			return true
+			return true, v
 		}
-		log.Printf("Parse %v as float - %v", d, err)
-		_, err = strconv.ParseInt(d, 10, 64)
+		log.Printf("Parse %v as float failed - %v", d, err)
+		v1, err := strconv.ParseInt(d, 10, 64)
 		if err == nil {
-			return true
+			return true, v1
 		}
-		log.Printf("Parse %v as int - %v", d, err)
-		return false
+		log.Printf("Parse %v as int failed - %v", d, err)
+		return false, 0
 	}
+}
+
+func ConvertValues(d []string, typ EntityType) ([]interface{}, error) {
+	converted := make([]interface{}, len(d))
+	converter, ok := detector[typ]
+	if !ok {
+		log.Printf("Converter not found for %v", typ)
+		return converted, errors.New("Converter not found for " + typ.String())
+	}
+	for i, v := range d {
+		ok, val := converter(v)
+		if !ok {
+			log.Printf("Conversion of %s as %v failed", v, typ)
+			continue
+		}
+		converted[i] = val
+	}
+	return converted, nil
 }
 
 func DetectType(d []string) (EntityType, bool, error) {
@@ -88,7 +108,7 @@ func DetectType(d []string) (EntityType, bool, error) {
 		log.Printf("Try 1 %s as %v", d, typeInfo)
 		ok := true
 		for _, s := range d {
-			thisOk := detect(s)
+			thisOk, _ := detect(s)
 			if !thisOk {
 				unidentified = append(unidentified, s)
 				ok = false
@@ -100,13 +120,14 @@ func DetectType(d []string) (EntityType, bool, error) {
 		}
 	}
 
+	foundType := None
 	thisHeaders = true
 	for _, typeInfo := range order {
 		detect := detector[typeInfo]
 		log.Printf("Try 2 %s as %v", d[1:], typeInfo)
 		ok := true
 		for _, s := range d[1:] {
-			thisOk := detect(s)
+			thisOk, _ := detect(s)
 			if !thisOk {
 				unidentified = append(unidentified, s)
 				ok = false
@@ -114,9 +135,44 @@ func DetectType(d []string) (EntityType, bool, error) {
 			}
 		}
 		if ok {
-			return typeInfo, thisHeaders, nil
+			foundType = typeInfo
+			break
 		}
 	}
 
-	return none, true, errors.New(fmt.Sprintf("Failed to identify - %v", unidentified))
+	if thisHeaders {
+		columnName := d[0]
+		typeByColumnName := columnTypeFromName(columnName)
+		if typeByColumnName != None {
+			foundType = typeByColumnName
+		}
+	}
+
+	if foundType != None {
+		return foundType, thisHeaders, nil
+	}
+
+	return None, thisHeaders, errors.New(fmt.Sprintf("Failed to identify - %v", unidentified))
+}
+
+var nameMap = map[string]EntityType{
+	"price": Money,
+	"income": Money,
+	"amount": Money,
+	"wage": Money,
+	"cost":Money,
+}
+
+func columnTypeFromName(name string) EntityType {
+	for n, typ := range nameMap {
+		if strings.HasSuffix(name, n) {
+			log.Printf("Selecting type %s because of Suffix %s in %s", typ.String(), n, name)
+			return typ
+		}
+		if strings.HasPrefix(name, n) {
+			log.Printf("Selecting type %s because of Prefix %s in %s", typ.String(), n, name)
+			return typ
+		}
+	}
+	return None
 }

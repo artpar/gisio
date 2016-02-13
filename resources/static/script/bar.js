@@ -28,14 +28,20 @@ function appendBarChartArray(data, container) {
     var y0 = d3.scale.linear().range([height, 0]);
     var yAxisLeft = d3.svg.axis().scale(y0)
         .orient("left").ticks(5);
-    var valueline = d3.svg.line()
-        .x(function(d) { return x(d.date); })
-        .y(function(d) { return y0(d.close); });
 
-    var yAxis = container.append("g")
-        .attr("transform", "translate(0," + margin.top + ")")
-        .attr("height", height)
-        .attr("width", leftAxisWidth);
+    var valueline = d3.svg.line()
+        .x(function(d) { return d[0]; })
+        .y(function(d) { return y0(d[1]); });
+
+    container.append("path")        // Add the valueline path.
+        .attr("transform", "translate(" + ((margin.left/2) + 14) + "," + margin.top + ")")
+        .attr("d", valueline(data));
+
+    container.append("g")
+        .attr("transform", "translate(" + ((margin.left/2) + 14) + "," + margin.top + ")")
+        .attr("class", "y axis")
+        .style("fill", "steelblue")
+        .call(yAxisLeft);
 
 
     var g = container.append("g")

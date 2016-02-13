@@ -34,6 +34,7 @@ func init() {
 		"January 02",
 		"Jan 02",
 		"06",
+		"2006",
 		"02 Jan 06",
 		"02 Jan 06 15:04 -0700",
 		"Monday, 02-Jan-06 15:04:05 MST",
