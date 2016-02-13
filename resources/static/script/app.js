@@ -2,7 +2,7 @@
  * Created by parth on 2/12/2016.
  */
 
-var height = 300, width = 300;
+var height = 400, width = 400;
 
 $(document).ready(function () {
     $.ajax({
@@ -57,7 +57,7 @@ $(document).ready(function () {
             if (colInfo.DistinctValueCount > 15) {
                 x = appendBarChart;
                 x.height = function (h) {
-                    return h;
+                    return h * 1.3;
                 };
                 x.width = function (w) {
                     return w * 3;
@@ -89,7 +89,7 @@ $(document).ready(function () {
             } else {
                 x = appendBarChart;
                 x.height = function (h) {
-                    return h;
+                    return h * 1.3;
                 };
                 x.width = function (w) {
                     return w * 3;
@@ -105,9 +105,12 @@ $(document).ready(function () {
 
     function addContainer(height, width, name) {
         var times = width / window.width;
-        console.log("times", times);
-        var col = $("<div class='col-md-" + (3 * times) + "'></div>");
+        console.log("times", width, height);
+        var col = $("<div></div>");
         col.attr("id", "container-" + name);
+        col.css("width", width + "px");
+        col.css("float", "left");
+        col.css("height", height + "px");
         col.append("<span>" + name + "</span>");
         $("#chart").append(col);
         return d3.select("#container-" + name)

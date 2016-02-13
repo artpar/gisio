@@ -2,6 +2,15 @@
  * Created by fundo on 2/13/2016.
  */
 
+function mapTo2dArray(data) {
+    var keys = Object.keys(data);
+    var arrayData = [];
+    for (var i = 0; i < keys.length; i++) {
+        arrayData.push([keys[i], data[keys[i]]]);
+    }
+    return arrayData;
+}
+
 /**
  * K-combinations
  *

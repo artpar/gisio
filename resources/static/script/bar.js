@@ -3,11 +3,7 @@
  */
 
 function appendBarChart(data, container) {
-    var keys = Object.keys(data);
-    var arrayData = [];
-    for (var i = 0; i < keys.length; i++) {
-        arrayData.push([keys[i], data[keys[i]]]);
-    }
+    var arrayData = mapTo2dArray(data);
     nv.addGraph(function () {
         var chart = nv.models.discreteBarChart()
             .x(function (d) {
