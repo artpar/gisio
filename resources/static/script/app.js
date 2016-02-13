@@ -20,31 +20,36 @@ $(document).ready(function () {
                     return d.ColumnName + " - " + d.TypeInfo + (  d.IsEnum ? "(Enum)" : ""  );
                 });
 
-            for (var i = 0; i < data.ColumnInfo.length; i++) {
-                var keys = [
-                    data.ColumnInfo[i].TypeInfo + "&" + data.ColumnInfo[i].IsEnum.toString(),
-                    "&" + data.ColumnInfo[i].IsEnum.toString()
-                ];
-
-                var f = undefined;
-                for (var x = 0; x < keys.length; x++) {
-                    var mapKey = keys[x];
-                    f = functionMap[mapKey];
-                    if (f != undefined) {
-                        break
+            k_combinations(data.ColumnInfo, 1).forEach(function (colInfo) {
+                    var col = colInfo[0];
+                    console.log("try - ", col);
+                    var keys = [
+                        col.TypeInfo + "&" + col.IsEnum.toString(),
+                        "&" + col.IsEnum.toString()
+                    ];
+                    var f = getFunction(keys);
+                    if (f == undefined) {
+                        return
                     }
+                    f = f(col);
+                    var container = addContainer(f.height(height), f.width(width), f.columnName());
+                    f(col.ValueCounts, container)
                 }
-                if (f == undefined) {
-                    continue
-                }
-                f = f(data.ColumnInfo[i]);
-
-                var container = addContainer(f.height(height), f.width(width), f.columnName());
-
-                f(data.ColumnInfo[i].ValueCounts, container)
-            }
+            )
         }
     });
+
+    function getFunction(keys) {
+        var f = undefined;
+        for (var x = 0; x < keys.length; x++) {
+            var mapKey = keys[x];
+            f = functionMap[mapKey];
+            if (f != undefined) {
+                break
+            }
+        }
+        return f;
+    }
 
     var functionMap = {
         '&true': function (colInfo) {
@@ -100,17 +105,15 @@ $(document).ready(function () {
 
     function addContainer(height, width, name) {
         var times = width / window.width;
-        console.log("times", times)
+        console.log("times", times);
         var col = $("<div class='col-md-" + (3 * times) + "'></div>");
         col.attr("id", "container-" + name);
         col.append("<span>" + name + "</span>");
         $("#chart").append(col);
-        var container = d3.select("#container-" + name)
+        return d3.select("#container-" + name)
             .append("svg:svg")
             .style('height', height)
             .style('width', width)
             .attr('id', name);
-
-        return container;
     }
 });
