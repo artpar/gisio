@@ -141,7 +141,6 @@ func DetectType(d []string) (EntityType, bool, error) {
 	thisHeaders := false
 	for _, typeInfo := range order {
 		detect := detector[typeInfo]
-		log.Printf("Try 1 %s as %v", d, typeInfo)
 		ok := true
 		for _, s := range d {
 			thisOk, _ := detect(s)
@@ -151,6 +150,7 @@ func DetectType(d []string) (EntityType, bool, error) {
 				break
 			}
 		}
+		log.Printf("Try 1 %s as %v - %v", d, typeInfo, ok)
 		if ok {
 			return typeInfo, thisHeaders, nil
 		}
@@ -160,7 +160,6 @@ func DetectType(d []string) (EntityType, bool, error) {
 	thisHeaders = true
 	for _, typeInfo := range order {
 		detect := detector[typeInfo]
-		log.Printf("Try 2 %s as %v", d[1:], typeInfo)
 		ok := true
 		for _, s := range d[1:] {
 			thisOk, _ := detect(s)
@@ -170,6 +169,7 @@ func DetectType(d []string) (EntityType, bool, error) {
 				break
 			}
 		}
+		log.Printf("Try 2 %s as %v - %v", d[1:], typeInfo, ok)
 		if ok {
 			foundType = typeInfo
 			break

@@ -62,6 +62,7 @@ func main() {
 	rtr := mux.NewRouter()
 	rtr.HandleFunc("/data/{filename:.+}/index.html", index).Methods("GET")
 	rtr.HandleFunc("/data/{filename:.+}/info", info).Methods("GET")
+	rtr.HandleFunc("/data/{filename:.+}/operation", operation).Methods("GET")
 	rtr.HandleFunc("/data/list", list).Methods("GET")
 	rtr.HandleFunc("/meta/templates", templateList).Methods("GET")
 	rtr.HandleFunc("/", list).Methods("GET")
@@ -124,6 +125,22 @@ func SendJson(w http.ResponseWriter, d interface{}) {
 }
 
 func info(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	filename, _ := vars["filename"]
+	log.Printf("Get info for file - %s", filename)
+	f, ok := dataMap[filename]
+	if !ok {
+		log.Printf("Load file info - %s\n", filename)
+		err := LoadData(filename)
+		CheckErr(err, "Load failed")
+	}
+	f, _ = dataMap[filename]
+	b, _ := json.Marshal(f)
+	log.Printf("Data - %s", string(b))
+	SendJson(w, &f)
+}
+
+func operation(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	filename, _ := vars["filename"]
 	log.Printf("Get info for file - %s", filename)

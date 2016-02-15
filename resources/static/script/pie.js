@@ -20,6 +20,7 @@ function appendPieChartByMap(data, container) {
             .y(function (d) {
                 return d[1]
             })
+            .color(d3.scale.category20())
             .showLabels(true);
 
         container.datum(arrayData)

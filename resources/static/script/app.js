@@ -6,8 +6,8 @@ var height = 300, width = 300;
 
 $(document).ready(function () {
     $.ajax({
-        url: "http://localhost:2299/data/Catsup.csv/info",
-        //url: baseUrl + 'info',
+        //url: "http://localhost:2299/data/Catsup.csv/info",
+        url: baseUrl + 'info',
         success: function (d) {
             var data = JSON.parse(d);
             console.log("Data: ", data);
@@ -18,7 +18,7 @@ $(document).ready(function () {
                 .enter()
                 .append("pre")
                 .text(function (d) {
-                    return d.ColumnName + " - " + d.TypeInfo + (  d.IsEnum ? "(Enum)" : ""  );
+                    return d.ColumnName + " - " + d.TypeInfo + (  d.IsEnum ? "(Enum)" : d.IsUnique ? "(Unique)" : ""  );
                 });
 
             k_combinations(data.ColumnInfo, 1).forEach(function (colInfo) {
@@ -37,6 +37,42 @@ $(document).ready(function () {
                     f(col.ValueCounts, container)
                 }
             );
+
+            k_combinations(data.ColumnInfo, 2).forEach(function (cols) {
+                    permutations(cols).forEach(function (colInfo) {
+                        console.log("combinations of 2", colInfo);
+                        var colX = colInfo[0];
+                        var colY = colInfo[1];
+                        if (colX.TypeInfo == "number" && colX.IsUnique && colY.TypeInfo == "number" && !colY.IsUnique && !colY.IsEnum) {
+                            var f = appendAreaChart;
+                            var container = addContainer(height * 1.3, width * 3, colX.ColumnName + " vs. " + colY.ColumnName);
+                            $.ajax({
+                                url: "operation",
+                                data: {
+                                    "operation": "MapColumnValue",
+                                    "data": [
+                                        {
+                                            "ColumnName": colX.ColumnName
+                                        },
+                                        {
+                                            "ColumnName": colY.ColumnName
+                                        }
+                                    ]
+                                },
+                                success: function (d) {
+                                    f(d, container)
+                                }
+                            })
+                        }
+                        //f = f(colX);
+                        //var container = addContainer(f.height(height), f.width(width), f.columnName());
+                        //console.log(f.columnName(), " for ", f);
+                        //f(colX.ValueCounts, container)
+                    })
+                }
+            );
+
+
         }
     });
 

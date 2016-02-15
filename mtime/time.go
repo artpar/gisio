@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sort"
 //"fmt"
+//	"log"
 )
 
 var timeFormat []string
@@ -71,15 +72,24 @@ func GetTime(t string) (time.Time, string, error) {
 	return time.Now(), "", errors.New("Unrecognised time format - " + t)
 }
 
-func GetDate(t string) (time.Time, string, error) {
+func GetDate(t1 string) (time.Time, string, error) {
 	for _, format := range dateFormat {
-		// fmt.Printf("Testing %s with %s\n", t, format)
-		t, err := time.Parse(format, t)
+		//log.Printf("Testing %s with %s\n", t1, format)
+		t, err := time.Parse(format, t1)
+
 		if err == nil {
-			return t, format, nil
+			ret := true
+			if format == "2006" {
+				if t.Sub(time.Now()).Hours() > 735254 {
+					ret = false
+				}
+			}
+			if ret {
+				return t, format, nil
+			}
 		}
 	}
-	return time.Now(), "", errors.New("Unrecognised time format - " + t)
+	return time.Now(), "", errors.New("Unrecognised time format - " + t1)
 }
 
 func GetDateTime(t string) (time.Time, string, error) {

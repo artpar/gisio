@@ -33,6 +33,7 @@ type ColumnStats struct {
 type ColumnInfo struct {
 	TypeInfo   types.EntityType
 	IsEnum     bool
+	IsUnique   bool
 	ColumnName string
 	ColumnStats
 }
@@ -85,6 +86,7 @@ func (file LoadedFile) DetectColumnTypes() {
 		distinctCount := 0
 		counted := make(map[string]int, 0)
 		isEnum := true
+		isUnique := true
 		startAt := 0
 		if thisColumnHeaders {
 			startAt = 1
@@ -92,6 +94,7 @@ func (file LoadedFile) DetectColumnTypes() {
 		for j := startAt; j < file.RowCount; j++ {
 			_, ok := counted[file.data[j][i]]
 			if ok {
+				isUnique = false
 				counted[file.data[j][i]] = counted[file.data[j][i]] + 1
 			} else {
 				distinctCount = distinctCount + 1
@@ -115,6 +118,7 @@ func (file LoadedFile) DetectColumnTypes() {
 		file.FileInfo.ColumnInfo[i] = ColumnInfo{
 			TypeInfo:temp1,
 			IsEnum: isEnum,
+			IsUnique: isUnique,
 			ColumnName: columnName,
 			ColumnStats: ColumnStats{
 				DistinctValueCount: distinctCount,
@@ -125,6 +129,9 @@ func (file LoadedFile) DetectColumnTypes() {
 	}
 
 	file.FileInfo.HasHeaders = hasHeaders
+	if hasHeaders {
+		file.RowCount = file.RowCount - 1
+	}
 	log.Printf("FileInfo: %v", file.FileInfo)
 }
 
