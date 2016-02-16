@@ -2,8 +2,21 @@
  * Created by parth on 2/12/2016.
  */
 
-function appendPieChartByMap(data, container) {
-    var arrayData = mapTo2dArray(data);
+function appendPieChartByMap(data, container, invert) {
+    var arrayData;
+    if (!(data[0] instanceof Array )) {
+        arrayData = mapTo2dArray(data);
+    } else {
+        arrayData = data;
+    }
+    if (invert) {
+        console.log("invert data - ", arrayData);
+        for (var i = 0; i < arrayData.length; i++) {
+            var temp = arrayData[i][0];
+            arrayData[i][0] = arrayData[i][1];
+            arrayData[i][1] = temp;
+        }
+    }
     console.log("pie chart data ", JSON.stringify(data), JSON.stringify(arrayData));
     nv.addGraph(function () {
         var chart = nv.models.pieChart()

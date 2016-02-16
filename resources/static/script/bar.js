@@ -2,8 +2,22 @@
  * Created by parth on 2/12/2016.
  */
 
-function appendBarChart(data, container) {
-    var arrayData = mapTo2dArray(data);
+function appendBarChart(data, container, invert) {
+
+    var arrayData;
+    if (!(data[0] instanceof Array )) {
+        arrayData = mapTo2dArray(data);
+    } else {
+        arrayData = data;
+    }
+    if (invert) {
+        console.log("invert data - ", arrayData);
+        for (var i = 0; i < arrayData.length; i++) {
+            var temp = arrayData[i][0];
+            arrayData[i][0] = arrayData[i][1];
+            arrayData[i][1] = temp;
+        }
+    }
     //console.log("bar chart", arrayData);
     nv.addGraph(function () {
         var chart = nv.models.discreteBarChart()
@@ -11,7 +25,7 @@ function appendBarChart(data, container) {
                 return d[0]
             })
             .y(function (d) {
-                return d[1]
+                return parseFloat(d[1])
             })
             .staggerLabels(true)
             //.staggerLabels(historicalBarChart[0].values.length > 8)
@@ -27,8 +41,22 @@ function appendBarChart(data, container) {
     });
 }
 
-function appendAreaChart(data, container) {
-    var arrayData = mapTo2dArray(data);
+function appendAreaChart(data, container, invert) {
+    var arrayData;
+    if (!(data[0] instanceof Array )) {
+        arrayData = mapTo2dArray(data);
+    } else {
+        arrayData = data;
+    }
+    if (invert) {
+        console.log("invert data - ", arrayData);
+        for (var i = 0; i < arrayData.length; i++) {
+            var temp = arrayData[i][0];
+            arrayData[i][0] = arrayData[i][1];
+            arrayData[i][1] = temp;
+        }
+    }
+    console.log("final data - ", data);
     var total = 0;
     for (var i = 0; i < arrayData.length; i++) {
         var newVal = parseInt(arrayData[i][0]);
@@ -46,14 +74,14 @@ function appendAreaChart(data, container) {
     var colors = d3.scale.category10();
     var chart;
     nv.addGraph(function () {
-        chart = nv.models.lineChart()
+        chart = nv.models.stackedAreaChart()
             .useInteractiveGuideline(true)
             .color(colors)
             .x(function (d) {
                 return d[0]
             })
             .y(function (d) {
-                return d[1]
+                return parseFloat(d[1])
             })
             .controlLabels({stacked: "Stacked"})
             .duration(300);
@@ -82,8 +110,22 @@ function appendAreaChart(data, container) {
 }
 
 
-function appendLineChart(data, container) {
-    var arrayData = mapTo2dArray(data);
+function appendLineChart(data, container, invert) {
+    var arrayData;
+    if (!(data[0] instanceof Array )) {
+        arrayData = mapTo2dArray(data);
+    } else {
+        arrayData = data;
+    }
+    if (invert) {
+        console.log("invert data - ", arrayData);
+        for (var i = 0; i < arrayData.length; i++) {
+            var temp = arrayData[i][0];
+            arrayData[i][0] = arrayData[i][1];
+            arrayData[i][1] = temp;
+        }
+    }
+
     var total = 0;
     for (var i = 0; i < arrayData.length; i++) {
         var newVal = parseInt(arrayData[i][0]);

@@ -16,6 +16,9 @@ import (
 	"encoding/json"
 	"github.com/artpar/gisio/table"
 	"github.com/artpar/gisio/grossfilter"
+	"strings"
+	"github.com/artpar/gisio/types"
+	"strconv"
 )
 
 const (
@@ -77,13 +80,13 @@ func templateList(w http.ResponseWriter, r *http.Request) {
 	Render("templateList", w, templates.Templates())
 }
 
-func CheckErr(err error, msg string) {
+func CheckErr(err error, msg... interface{}) {
 	if err != nil {
 		const size = 4096
 		stack := make([]byte, size)
 		stack = stack[:runtime.Stack(stack, false)]
 
-		log.Panic(msg + " \n" + err.Error() + "\n" + string(stack))
+		log.Panic(fmt.Sprintf(msg[0].(string), msg[1:]...) + " \n" + err.Error() + "\n" + string(stack))
 	}
 }
 
@@ -121,6 +124,7 @@ func LoadData(filename string) (error) {
 func SendJson(w http.ResponseWriter, d interface{}) {
 	by, err := json.Marshal(d)
 	CheckErr(err, fmt.Sprintf("Failed to write value as json - %v", err))
+	w.Header().Set("Content-type", "application/json")
 	w.Write(by)
 }
 
@@ -140,9 +144,22 @@ func info(w http.ResponseWriter, r *http.Request) {
 	SendJson(w, &f)
 }
 
+type Query struct {
+	Operation  string
+	Function   string
+	ColumnName string
+	Data       []Query
+}
+
 func operation(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
 	vars := mux.Vars(r)
 	filename, _ := vars["filename"]
+	queryString := r.Form["q"][0]
+	var query Query
+	var result [][]string
+	err := json.Unmarshal([]byte(queryString), &query)
+	CheckErr(err, "Failed to understand input - " + queryString)
 	log.Printf("Get info for file - %s", filename)
 	f, ok := dataMap[filename]
 	if !ok {
@@ -151,9 +168,60 @@ func operation(w http.ResponseWriter, r *http.Request) {
 		CheckErr(err, "Load failed")
 	}
 	f, _ = dataMap[filename]
-	b, _ := json.Marshal(f)
-	log.Printf("Data - %s", string(b))
-	SendJson(w, &f)
+	log.Printf("Query - %v", query)
+	switch strings.ToLower(query.Operation) {
+	case "groupby":
+		log.Printf("Group by ")
+		switch strings.ToLower(query.Function) {
+		case "sum":
+			log.Printf("Doing sum of %v over %v", query.Data[0].ColumnName, query.Data[1].ColumnName)
+			resultMap := make(map[string]interface{})
+			col1 := query.Data[0].ColumnName
+			col2 := query.Data[1].ColumnName
+			col1Index, col2Index := -1, -1
+			for i, col := range f.ColumnInfo {
+				if col.ColumnName == col1 {
+					col1Index = i
+				}
+				if col.ColumnName == col2 {
+					col2Index = i
+				}
+			}
+			if col2Index == -1 || col1Index == -1 {
+				log.Panicf("Col 1 or Col 2 not found %d,%d", col1Index, col2Index)
+			}
+			if f.ColumnInfo[col2Index].TypeInfo != types.Number {
+				log.Panicf("Col 2 is not a numeric column - " + f.ColumnInfo[col2Index].TypeInfo.String())
+			}
+			for i := f.FirstRowIndex; i < f.RowCount; i++ {
+				key := f.GetData(i, col1Index)
+				value := f.GetData(i, col2Index)
+				if value == "NA" {
+					value = "0"
+				}
+				numValue, err := strconv.ParseFloat(value, 64)
+				CheckErr(err, "Failed to parse %v as number", numValue)
+				_, ok := resultMap[key]
+				if ok {
+					resultMap[key] = resultMap[key].(float64) + numValue
+				} else {
+					resultMap[key] = numValue
+				}
+			}
+			result = Map2Array(resultMap)
+		}
+	}
+	SendJson(w, &result)
+}
+
+func Map2Array(m map[string]interface{}) [][]string {
+	result := make([][]string, 0)
+	for k, v := range m {
+		result = append(result, []string{k, fmt.Sprintf("%v", v)})
+	}
+
+	return result
+
 }
 
 func index(w http.ResponseWriter, r *http.Request) {

@@ -9,7 +9,7 @@ $(document).ready(function () {
         //url: "http://localhost:2299/data/Catsup.csv/info",
         url: baseUrl + 'info',
         success: function (d) {
-            var data = JSON.parse(d);
+            var data = d;
             console.log("Data: ", data);
             d3.select("#columns")
                 .append("div")
@@ -43,24 +43,31 @@ $(document).ready(function () {
                         console.log("combinations of 2", colInfo);
                         var colX = colInfo[0];
                         var colY = colInfo[1];
-                        if (colX.TypeInfo == "number" && colX.IsUnique && colY.TypeInfo == "number" && !colY.IsUnique && !colY.IsEnum) {
-                            var f = appendAreaChart;
+                        if (colX.IsEnum && colY.TypeInfo == "number" && !colY.IsUnique && !colY.IsEnum) {
+
                             var container = addContainer(height * 1.3, width * 3, colX.ColumnName + " vs. " + colY.ColumnName);
                             $.ajax({
                                 url: "operation",
                                 data: {
-                                    "operation": "MapColumnValue",
-                                    "data": [
-                                        {
-                                            "ColumnName": colX.ColumnName
-                                        },
-                                        {
-                                            "ColumnName": colY.ColumnName
-                                        }
-                                    ]
+                                    'q': JSON.stringify({
+                                        "operation": "GroupBy",
+                                        "function": "sum",
+                                        "data": [
+                                            {
+                                                "ColumnName": colX.ColumnName
+                                            },
+                                            {
+                                                "ColumnName": colY.ColumnName
+                                            }
+                                        ]
+                                    })
                                 },
                                 success: function (d) {
-                                    f(d, container)
+                                    var f = appendBarChart;
+                                    if (d.length < 10) {
+                                        f = appendPieChartByMap
+                                    }
+                                    f(d, container, false)
                                 }
                             })
                         }
@@ -167,13 +174,13 @@ $(document).ready(function () {
     function addContainer(height, width, name) {
         var times = width / window.width;
         //console.log("times", width, height);
-        var col = $("<div></div>");
+        var col = $("<div   ></div>");
         var cleanName = clean(name);
         col.attr("id", "container-" + cleanName);
         col.css("width", width + "px");
         col.css("float", "left");
         col.css("height", height + "px");
-        col.append("<span>" + name + "</span>");
+        col.append("<p class='text-primary bg-info'>" + name + "</p>");
         $("#chart").append(col);
         return d3.select("#container-" + cleanName)
             .append("svg:svg")

@@ -17,11 +17,12 @@ func (l LoadedFile) GetData(i, j int) string {
 }
 
 type FileInfo struct {
-	Filename    string  `json:"Filename"`
-	ColumnCount int  `json:"ColumnCount"`
-	RowCount    int  `json:"RowCount"`
-	HasHeaders  bool
-	ColumnInfo  []ColumnInfo
+	Filename      string  `json:"Filename"`
+	ColumnCount   int  `json:"ColumnCount"`
+	RowCount      int  `json:"RowCount"`
+	HasHeaders    bool
+	FirstRowIndex int
+	ColumnInfo    []ColumnInfo
 }
 
 type ColumnStats struct {
@@ -129,7 +130,9 @@ func (file LoadedFile) DetectColumnTypes() {
 	}
 
 	file.FileInfo.HasHeaders = hasHeaders
+	file.FileInfo.FirstRowIndex = 0
 	if hasHeaders {
+		file.FileInfo.FirstRowIndex = 1
 		file.RowCount = file.RowCount - 1
 	}
 	log.Printf("FileInfo: %v", file.FileInfo)
