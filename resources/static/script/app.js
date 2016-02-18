@@ -23,6 +23,9 @@ $(document).ready(function () {
 
             k_combinations(data.ColumnInfo, 1).forEach(function (colInfo) {
                     var col = colInfo[0];
+                    if (col.ColumnName == "") {
+                        return;
+                    }
                     var keys = [
                         col.TypeInfo + "&" + col.IsEnum.toString(),
                         "&" + col.IsEnum.toString()
@@ -59,10 +62,10 @@ $(document).ready(function () {
                     permutations(cols).forEach(function (colInfo) {
                         //console.log("combinations of 2", colInfo);
                         var colX = colInfo[0];
-                        if (colX.ColumnName == "") {
+                        var colY = colInfo[1];
+                        if (colX.ColumnName == "" || colY.ColumnName == "") {
                             return;
                         }
-                        var colY = colInfo[1];
                         if (colY.TypeInfo == "number" && !colY.IsUnique && !colY.IsEnum) {
                             $.ajax({
                                 url: "operation",
@@ -81,7 +84,7 @@ $(document).ready(function () {
                                     })
                                 },
                                 success: function (d) {
-                                    console.log("Bar chart for " + colX.ColumnName + " vs. " + colY.ColumnName, d);
+                                    console.log("2d chart for " + colX.ColumnName + " vs. " + colY.ColumnName, d);
                                     var f = appendBarChart;
                                     var h = height * 1.3;
                                     var w = width * 3;
@@ -90,10 +93,13 @@ $(document).ready(function () {
                                         w = width;
                                         f = appendPieChart
                                     }
-                                    if (colX.TypeInfo == "number" || d.length > 40) {
+                                    if (colX.TypeInfo == "number" && d.length > 40) {
                                         f = appendScatterChart
                                     }
                                     if (colX.TypeInfo == "date") {
+                                        for (var i = 0; i < d.length; i++) {
+                                            d[i][0] = new Date(d[i][0])
+                                        }
                                         f = appendAreaChart
                                     }
                                     var container = addContainer(h, w, colX.ColumnName + " vs. " + colY.ColumnName);

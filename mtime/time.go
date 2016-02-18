@@ -5,7 +5,8 @@ import (
 	"errors"
 	"sort"
 //"fmt"
-	"log"
+//	"log"
+	"fmt"
 )
 
 var timeFormat []string
@@ -35,7 +36,7 @@ func init() {
 		"January 02, 2006",
 		"January 02",
 		"Jan 02",
-		// "06",
+		"06",
 		"2006",
 		"2006.0",
 		"2006.00",
@@ -66,7 +67,7 @@ func init() {
 
 func GetTime(t string) (time.Time, string, error) {
 	for _, format := range timeFormat {
-		// fmt.Printf("Testing %s with %s\n", t, format)
+		fmt.Printf("Testing %s with %s\n", t, format)
 		t, err := time.Parse(format, t)
 		if err == nil {
 			return t, format, nil
@@ -77,7 +78,7 @@ func GetTime(t string) (time.Time, string, error) {
 
 func GetDate(t1 string) (time.Time, string, error) {
 	for _, format := range dateFormat {
-		//log.Printf("Testing %s with %s\n", t1, format)
+		//fmt.Printf("Testing %s with %s\n", t1, format)
 		t, err := time.Parse(format, t1)
 
 		if err == nil {
@@ -87,7 +88,13 @@ func GetDate(t1 string) (time.Time, string, error) {
 					ret = false
 				}
 			}
-			log.Printf("Detected %v as date by format %s => %v, Hours: %d", t1, format, t, t.Sub(time.Now()).Hours())
+			if format == "06" {
+				if t.Sub(time.Now()).Hours() > -150179 {
+					ret = false
+				}
+			}
+
+			//log.Printf("Detected %v as date by format %s => %v, Hours: %d", t1, format, t, t.Sub(time.Now()).Hours())
 			if ret {
 				return t, format, nil
 			}

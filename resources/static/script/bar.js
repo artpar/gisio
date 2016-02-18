@@ -57,15 +57,6 @@ function appendAreaChart(data, container, invert) {
         }
     }
     console.log("final data - ", data);
-    var total = 0;
-    for (var i = 0; i < arrayData.length; i++) {
-        var newVal = parseInt(arrayData[i][0]);
-        if (isNaN(newVal)) {
-            newVal = total / (i + 1);
-        }
-        total = total + newVal;
-        arrayData[i][0] = newVal
-    }
     arrayData.sort(function (a, b) {
         return a[0] - b[0];
     });
@@ -73,6 +64,11 @@ function appendAreaChart(data, container, invert) {
 
     var colors = d3.scale.category10();
     var chart;
+    var xIsDate = false;
+    if (arrayData[0][0] instanceof Date) {
+        xIsDate = true;
+    }
+
     nv.addGraph(function () {
         chart = nv.models.stackedAreaChart()
             .useInteractiveGuideline(true)
@@ -85,7 +81,12 @@ function appendAreaChart(data, container, invert) {
             })
             .controlLabels({stacked: "Stacked"})
             .duration(300);
-        //chart.xAxis.tickFormat(d3.format('%d'));
+        chart.xAxis.tickFormat(function (d) {
+            if (xIsDate) {
+                return d3.time.format('%x')(new Date(d))
+            }
+            return d3.format('%d')
+        });
         //chart.yAxis.tickFormat(d3.format(',.4f'));
         chart.legend.vers('furious');
         container.datum([{

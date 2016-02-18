@@ -1,16 +1,19 @@
 package mtime
 
-import "testing"
+import (
+	"testing"
+	//"fmt"
+)
 
 func TestTimeParse(t *testing.T) {
 	times := []string{
 		"26 January 2016",
+		"00",
 	}
 	for _, time := range times {
-		theTime, format, err := GetTime(time)
-		if err != nil {
-			t.Error(err)
+		theTime, format, _ := GetDate(time)
+		{
+			t.Logf("%s parsed from [%s] to %v", time, format, theTime)
 		}
-		t.Logf("%s parsed from [%s] to %v", time, format, theTime)
 	}
 }
