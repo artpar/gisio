@@ -127,9 +127,9 @@ func (file LoadedFile) DetectColumnTypes() {
 		for j := startAt; j < file.RowCount; j++ {
 			_, ok := counted[file.data[j][i]]
 			if ok {
-				isUnique = false
 				counted[file.data[j][i]] = counted[file.data[j][i]] + 1
 			} else {
+				isUnique = false
 				distinctCount = distinctCount + 1
 				counted[file.data[j][i]] = 1
 			}
