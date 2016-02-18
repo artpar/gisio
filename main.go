@@ -209,6 +209,42 @@ func operation(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			result = Map2Array(resultMap)
+
+		case "count":
+			log.Printf("Doing count of %v over %v", query.Data[0].ColumnName, query.Data[1].ColumnName)
+			resultMap := make(map[string]interface{})
+			col1 := query.Data[0].ColumnName
+			col2 := query.Data[1].ColumnName
+			col1Index, col2Index := -1, -1
+			for i, col := range f.ColumnInfo {
+				if col.ColumnName == col1 {
+					col1Index = i
+				}
+				if col.ColumnName == col2 {
+					col2Index = i
+				}
+			}
+			if col2Index == -1 || col1Index == -1 {
+				log.Panicf("Col 1 or Col 2 not found %d,%d", col1Index, col2Index)
+			}
+			for i := f.FirstRowIndex; i < f.RowCount; i++ {
+				key := f.GetData(i, col1Index)
+				value := f.GetData(i, col2Index)
+				if value == "NA" {
+					value = "0"
+				}
+				// numValue, err := strconv.ParseFloat(value, 64)
+				//CheckErr(err, "Failed to parse %v as number", numValue)
+				_, ok := resultMap[key]
+				if ok {
+					resultMap[key] = resultMap[key].(int) + 1
+				} else {
+					resultMap[key] = 1
+				}
+			}
+			result = Map2Array(resultMap)
+
+
 		}
 	}
 	SendJson(w, &result)

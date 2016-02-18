@@ -59,6 +59,11 @@ var (
 )
 var detector map[EntityType]func(string) (bool, interface{})
 
+var CurrencyType struct {
+	Name  string
+	Value float64
+}
+
 func init() {
 	detector = make(map[EntityType]func(string) (bool, interface{}))
 	detector[Time] = func(d string) (bool, interface{}) {
@@ -92,7 +97,7 @@ func init() {
 		return false, s
 	}
 	detector[Money] = func(d string) (bool, interface{}) {
-		r := regexp.MustCompile("^([a-zA-Z]{0,3}\\.?)?[0-9]+\\.[0-9]{0,2}([a-zA-Z]{0,3})?")
+		r := regexp.MustCompile("^([a-zA-Z]{0,3}\\.? )?[0-9]+\\.[0-9]{0,2}([a-zA-Z]{0,3})?")
 		return r.MatchString(d), d
 	}
 	detector[Boolean] = func(d string) (bool, interface{}) {
@@ -115,6 +120,9 @@ func init() {
 		}
 		log.Printf("Parse %v as int failed - %v", d, err)
 		return false, 0
+	}
+	detector[None] = func(d string) (bool, interface{}) {
+		return true, d
 	}
 }
 

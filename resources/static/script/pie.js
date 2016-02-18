@@ -2,7 +2,7 @@
  * Created by parth on 2/12/2016.
  */
 
-function appendPieChartByMap(data, container, invert) {
+function appendPieChart(data, container, invert) {
     var arrayData;
     if (!(data[0] instanceof Array )) {
         arrayData = mapTo2dArray(data);
@@ -21,13 +21,6 @@ function appendPieChartByMap(data, container, invert) {
     nv.addGraph(function () {
         var chart = nv.models.pieChart()
             .x(function (d) {
-                console.log("for zero", d);
-                if (d[0] == "0") {
-                    return "zero"
-                }
-                if (d[0] == "1") {
-                    return "one"
-                }
                 return d[0]
             })
             .y(function (d) {
@@ -41,7 +34,5 @@ function appendPieChartByMap(data, container, invert) {
             .call(chart);
 
         return chart;
-    }, function () {
-        console.log("pie chart complete")
     });
 }

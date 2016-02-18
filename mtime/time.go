@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sort"
 //"fmt"
-//	"log"
+	"log"
 )
 
 var timeFormat []string
@@ -35,7 +35,7 @@ func init() {
 		"January 02, 2006",
 		"January 02",
 		"Jan 02",
-		"06",
+		// "06",
 		"2006",
 		"2006-01-02",
 		"2006 01 02",
@@ -79,11 +79,12 @@ func GetDate(t1 string) (time.Time, string, error) {
 
 		if err == nil {
 			ret := true
-			if format == "2006" {
-				if t.Sub(time.Now()).Hours() > 735254 {
+			if format == "2006" || format == "06" {
+				if t.Sub(time.Now()).Hours() > 182943 {
 					ret = false
 				}
 			}
+			log.Printf("Detected %v as date by format %s => %v, Hours: %d", t1, format, t, t.Sub(time.Now()).Hours())
 			if ret {
 				return t, format, nil
 			}

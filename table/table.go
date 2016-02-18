@@ -8,7 +8,8 @@ import (
 )
 
 type LoadedFile struct {
-	data [][]string
+	data          [][]string
+	convertedData [][]interface{}
 	*FileInfo
 }
 
@@ -39,8 +40,9 @@ type ColumnInfo struct {
 	ColumnStats
 }
 
-func (file LoadedFile) ProcessLoadedFile() {
+func (file LoadedFile) ProcessLoadedFile() error {
 	file.DetectColumnTypes()
+	return file.LoadData()
 }
 
 func NewLoadedFile(filename string, data [][]string) LoadedFile {
@@ -54,6 +56,36 @@ func NewLoadedFile(filename string, data [][]string) LoadedFile {
 	log.Printf("Process loaded file - %s", filename)
 	loadedFile.ProcessLoadedFile()
 	return loadedFile
+}
+
+func (file LoadedFile) LoadData() error {
+	start := 0
+	if file.HasHeaders {
+		start = 1
+	}
+	file.convertedData = make([][]interface{}, file.RowCount)
+	for i := 0; i < file.RowCount; i ++ {
+		file.convertedData[i] = make([]interface{}, file.ColumnCount)
+	}
+	for i := 0; i < file.ColumnCount; i++ {
+		column := ColumnFrom2dArray(file.data, i, start)
+		convertedValues, err := types.ConvertValues(column, file.ColumnInfo[i].TypeInfo)
+		if err != nil {
+			return err
+		}
+		for j := start; j < file.RowCount; j++ {
+			file.convertedData[j][i] = convertedValues[j - start]
+		}
+	}
+	return nil
+}
+
+func ColumnFrom2dArray(data [][]string, colIndex int, start int) []string {
+	res := make([]string, len(data) - start)
+	for i := start; i < len(data); i++ {
+		res[i - start] = data[i][colIndex]
+	}
+	return res
 }
 
 func (file LoadedFile) DetectColumnTypes() {
