@@ -37,6 +37,9 @@ func init() {
 		"Jan 02",
 		// "06",
 		"2006",
+		"2006.0",
+		"2006.00",
+		"2006.000",
 		"2006-01-02",
 		"2006 01 02",
 		"02 Jan 06",
@@ -79,7 +82,7 @@ func GetDate(t1 string) (time.Time, string, error) {
 
 		if err == nil {
 			ret := true
-			if format == "2006" || format == "06" {
+			if format == "2006" || format == "2006.0" || format == "2006.00" || format == "2006.000" {
 				if t.Sub(time.Now()).Hours() > 182943 {
 					ret = false
 				}

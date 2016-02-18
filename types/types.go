@@ -10,6 +10,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"sort"
 )
 
 type EntityType int
@@ -65,6 +66,7 @@ var CurrencyType struct {
 }
 
 func init() {
+	sort.Sort(&unknownNumbers)
 	detector = make(map[EntityType]func(string) (bool, interface{}))
 	detector[Time] = func(d string) (bool, interface{}) {
 		t, _, err := mtime.GetTime(d)
@@ -109,6 +111,12 @@ func init() {
 	}
 
 	detector[Number] = func(d string) (bool, interface{}) {
+		d = strings.ToLower(d)
+		in := sort.SearchStrings(unknownNumbers, d)
+		if in < len(unknownNumbers) && unknownNumbers[in] == d {
+			log.Printf("One of the unknowns - %v : %d", d, sort.SearchStrings(unknownNumbers, strings.ToLower(d)))
+			return true, 0
+		}
 		v, err := strconv.ParseFloat(d, 64)
 		if err == nil {
 			return true, v
@@ -125,6 +133,10 @@ func init() {
 		return true, d
 	}
 }
+
+var (
+	unknownNumbers = sort.StringSlice([]string{"na", "n/a", "-"})
+)
 
 func ConvertValues(d []string, typ EntityType) ([]interface{}, error) {
 	converted := make([]interface{}, len(d))

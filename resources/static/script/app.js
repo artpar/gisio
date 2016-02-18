@@ -39,28 +39,31 @@ $(document).ready(function () {
             );
 
 
-            k_combinations(data.ColumnInfo, 3).forEach(function (cols) {
-                permutations(cols).forEach(function (colInfo) {
-                    if ((colInfo[0].TypeInfo == "number" && colInfo[1].TypeInfo == "number" && colInfo[2].TypeInfo == "number")
-                        && (!colInfo[0].IsEnum && !colInfo[1].IsEnum && !colInfo[2].IsEnum )) {
-                        $.ajax({
-                            url: "operation",
-                            data: {
-                                'q': JSON.stringify({
-                                    "operation": "GroupBy"
-                                })
-                            }
-                        })
-                    }
-                });
-            });
+            //k_combinations(data.ColumnInfo, 3).forEach(function (cols) {
+            //    permutations(cols).forEach(function (colInfo) {
+            //        if ((colInfo[0].TypeInfo == "number" && colInfo[1].TypeInfo == "number" && colInfo[2].TypeInfo == "number")
+            //            && (!colInfo[0].IsEnum && !colInfo[1].IsEnum && !colInfo[2].IsEnum )) {
+            //            $.ajax({
+            //                url: "operation",
+            //                data: {
+            //                    'q': JSON.stringify({
+            //                        "operation": "GroupBy"
+            //                    })
+            //                }
+            //            })
+            //        }
+            //    });
+            //});
 
             k_combinations(data.ColumnInfo, 2).forEach(function (cols) {
                     permutations(cols).forEach(function (colInfo) {
                         //console.log("combinations of 2", colInfo);
                         var colX = colInfo[0];
+                        if (colX.ColumnName == "") {
+                            return;
+                        }
                         var colY = colInfo[1];
-                        if (colX.IsEnum && colY.TypeInfo == "number" && !colY.IsUnique && !colY.IsEnum) {
+                        if (colY.TypeInfo == "number" && !colY.IsUnique && !colY.IsEnum) {
                             $.ajax({
                                 url: "operation",
                                 data: {
@@ -87,11 +90,21 @@ $(document).ready(function () {
                                         w = width;
                                         f = appendPieChart
                                     }
+                                    if (colX.TypeInfo == "number" || d.length > 40) {
+                                        f = appendScatterChart
+                                    }
+                                    if (colX.TypeInfo == "date") {
+                                        f = appendAreaChart
+                                    }
                                     var container = addContainer(h, w, colX.ColumnName + " vs. " + colY.ColumnName);
                                     f(d, container, false)
                                 }
                             })
-                        } else if (colX.IsEnum && !colY.IsUnique) {
+                        }
+                        //else if (colX.TypeInfo == "number" && colY.TypeInfo == "number") {
+                        //
+                        //}
+                        else if (colX.IsEnum && !colY.IsUnique) {
                             $.ajax({
                                 url: "operation",
                                 data: {

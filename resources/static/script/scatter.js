@@ -3,16 +3,24 @@
  */
 
 function arrayToObjects(arrayData) {
-    var keys = arguments.splice(1);
+    var keys = argumentSplice(arguments, 1);
     var newData = [];
     for (var i = 0; i < arrayData.length; i++) {
         var row = {};
         for (var j = 0; j < keys.length; j++) {
-            row[keys[j]] = arrayData[i][j]
+            row[keys[j]] = +arrayData[i][j] || 3
         }
         newData.push(row)
     }
     return newData;
+}
+
+function argumentSplice(args, start) {
+    var data = [];
+    for (var i = start; i < args.length; i++) {
+        data.push(args[i])
+    }
+    return data
 }
 
 
@@ -34,27 +42,31 @@ function appendScatterChart(data, container, invert) {
     }
 
     arrayData = arrayToObjects(arrayData, "x", "y", "size");
+    console.log("scatter data ", arrayData);
     nv.addGraph(function () {
         var chart = nv.models.scatterChart()
             .showDistX(true)    //showDist, when true, will display those little distribution lines on the axis.
             .showDistY(true)
-            .transitionDuration(350)
             .color(d3.scale.category10().range());
 
         //Configure how the tooltip looks.
-        chart.tooltipContent(function (key) {
-            return '<h3>' + key + '</h3>';
-        });
+        //chart.tooltip().contentGenerator(function (key) {
+        //    return '<h3>' + key + '</h3>';
+        //});
 
         //Axis settings
         chart.xAxis.tickFormat(d3.format('.02f'));
         chart.yAxis.tickFormat(d3.format('.02f'));
 
         //We want to show shapes other than circles.
-        chart.scatter.onlyCircles(false);
+        //chart.scatter.onlyCircles(false);
 
         //var myData = randomData(4, 40);
-        container.datum(arrayData)
+        container.datum([{
+                "key": "Value",
+                "values": arrayData
+            }])
+            .transition().duration(350)
             .call(chart);
 
         nv.utils.windowResize(chart.update);

@@ -233,8 +233,6 @@ func operation(w http.ResponseWriter, r *http.Request) {
 				if value == "NA" {
 					value = "0"
 				}
-				// numValue, err := strconv.ParseFloat(value, 64)
-				//CheckErr(err, "Failed to parse %v as number", numValue)
 				_, ok := resultMap[key]
 				if ok {
 					resultMap[key] = resultMap[key].(int) + 1
