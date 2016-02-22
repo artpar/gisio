@@ -32,7 +32,9 @@ function appendPieChart(data, container, invert) {
         container.datum(arrayData)
             .transition().duration(1200)
             .call(chart);
-
+        chart.pie.dispatch.on("elementClick", function (d) {
+            console.log("you clicked ", d)
+        });
         return chart;
     });
 }

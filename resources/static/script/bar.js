@@ -18,9 +18,12 @@ function appendBarChart(data, container, invert) {
             arrayData[i][1] = temp;
         }
     }
+    arrayData.sort(function (a, b) {
+        return a[0] - b[0];
+    });
     //console.log("bar chart", arrayData);
     nv.addGraph(function () {
-        var chart = nv.models.discreteBarChart()
+        var chart = nv.models.multiBarChart()
             .x(function (d) {
                 return d[0]
             })
@@ -29,14 +32,16 @@ function appendBarChart(data, container, invert) {
             })
             .staggerLabels(true)
             //.staggerLabels(historicalBarChart[0].values.length > 8)
-            .showValues(true)
+            //.showValues(true)
             .duration(250);
 
         container.datum([{key: "", values: arrayData}])
             .call(chart);
 
         nv.utils.windowResize(chart.update);
-
+        chart.multibar.dispatch.on("elementClick", function(d){
+            console.log("you clicked ", d)
+        });
         return chart;
     });
 }

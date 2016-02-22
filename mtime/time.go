@@ -6,7 +6,7 @@ import (
 	"sort"
 //"fmt"
 //	"log"
-	"fmt"
+//	"fmt"
 )
 
 var timeFormat []string
@@ -67,7 +67,7 @@ func init() {
 
 func GetTime(t string) (time.Time, string, error) {
 	for _, format := range timeFormat {
-		fmt.Printf("Testing %s with %s\n", t, format)
+		//fmt.Printf("Testing %s with %s\n", t, format)
 		t, err := time.Parse(format, t)
 		if err == nil {
 			return t, format, nil

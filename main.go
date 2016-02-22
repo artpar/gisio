@@ -10,15 +10,17 @@ import (
 	"io/ioutil"
 	"runtime"
 	"html/template"
+	_ "net/http/pprof"
+
 	"io"
 	"github.com/howeyc/fsnotify"
 	"errors"
 	"encoding/json"
 	"github.com/artpar/gisio/table"
-	"github.com/artpar/gisio/grossfilter"
 	"strings"
 	"github.com/artpar/gisio/types"
 	"strconv"
+	"github.com/artpar/gisio/grossfilter"
 )
 
 const (
@@ -33,6 +35,9 @@ func init() {
 	watcher, err := fsnotify.NewWatcher()
 	CheckErr(err, "Failed to create new watcher")
 
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	go func() {
 		for {
 			select {

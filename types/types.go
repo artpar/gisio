@@ -103,6 +103,15 @@ func init() {
 		return r.MatchString(d), d
 	}
 	detector[Boolean] = func(d string) (bool, interface{}) {
+		d = strings.ToLower(d)
+		switch d {
+		case "yes":
+		case "1":
+			d = "true"
+		case "no":
+		case "0":
+			d = "false"
+		}
 		r, err := strconv.ParseBool(d)
 		if err != nil {
 			return false, false
@@ -148,7 +157,7 @@ func ConvertValues(d []string, typ EntityType) ([]interface{}, error) {
 	for i, v := range d {
 		ok, val := converter(v)
 		if !ok {
-			log.Printf("Conversion of %s as %v failed", v, typ)
+			// log.Printf("Conversion of %s as %v failed", v, typ)
 			continue
 		}
 		converted[i] = val

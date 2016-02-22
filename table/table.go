@@ -5,16 +5,21 @@ import (
 	"strconv"
 	"log"
 	"math"
+	"math/rand"
 )
 
 type LoadedFile struct {
-	data          [][]string
+	Data          [][]string `json:"-"`
 	convertedData [][]interface{}
 	*FileInfo
 }
 
 func (l LoadedFile) GetData(i, j int) string {
-	return l.data[i][j]
+	return l.Data[i][j]
+}
+
+func (l LoadedFile) AddRows(newData [][]string) {
+	l.Data = append(l.Data, newData...)
 }
 
 type FileInfo struct {
@@ -47,7 +52,7 @@ func (file LoadedFile) ProcessLoadedFile() error {
 
 func NewLoadedFile(filename string, data [][]string) LoadedFile {
 	t := make([]ColumnInfo, 0)
-	loadedFile := LoadedFile{data: data,
+	loadedFile := LoadedFile{Data: data,
 		FileInfo: &FileInfo{
 			Filename: filename,
 			ColumnInfo: t,
@@ -68,7 +73,7 @@ func (file LoadedFile) LoadData() error {
 		file.convertedData[i] = make([]interface{}, file.ColumnCount)
 	}
 	for i := 0; i < file.ColumnCount; i++ {
-		column := ColumnFrom2dArray(file.data, i, start)
+		column := ColumnFrom2dArray(file.Data, i, start)
 		convertedValues, err := types.ConvertValues(column, file.ColumnInfo[i].TypeInfo)
 		if err != nil {
 			return err
@@ -89,13 +94,13 @@ func ColumnFrom2dArray(data [][]string, colIndex int, start int) []string {
 }
 
 func (file LoadedFile) DetectColumnTypes() {
-	file.RowCount = len(file.data)
+	file.RowCount = len(file.Data)
 	if file.RowCount == 0 {
 		log.Printf("Row count is zero")
 		return
 	}
 	log.Printf("Number of rows : %d\n", file.RowCount)
-	file.ColumnCount = len(file.data[0])
+	file.ColumnCount = len(file.Data[0])
 	file.FileInfo.ColumnInfo = make([]ColumnInfo, file.ColumnCount)
 	enumThreshHold := int(math.Min(float64((file.RowCount * 10) / 100), 70))
 
@@ -103,8 +108,9 @@ func (file LoadedFile) DetectColumnTypes() {
 	for i := 0; i < file.ColumnCount; i++ {
 		thisColumnHeaders := false
 		colValues := make([]string, 0)
-		for j := 0; j < file.RowCount && j < 10; j++ {
-			colValues = append(colValues, file.data[j][i])
+		colValues = append(colValues, file.Data[0][i])
+		for j := 1; j < file.RowCount && j < 20; j++ {
+			colValues = append(colValues, file.Data[rand.Intn(file.RowCount)][i])
 		}
 		log.Printf("Values for detection 1 - %s", colValues)
 		var err error
@@ -125,13 +131,13 @@ func (file LoadedFile) DetectColumnTypes() {
 			startAt = 1
 		}
 		for j := startAt; j < file.RowCount; j++ {
-			_, ok := counted[file.data[j][i]]
+			_, ok := counted[file.Data[j][i]]
 			if ok {
-				counted[file.data[j][i]] = counted[file.data[j][i]] + 1
+				counted[file.Data[j][i]] = counted[file.Data[j][i]] + 1
 			} else {
 				isUnique = false
 				distinctCount = distinctCount + 1
-				counted[file.data[j][i]] = 1
+				counted[file.Data[j][i]] = 1
 			}
 
 			if distinctCount > enumThreshHold && isEnum {
@@ -145,7 +151,7 @@ func (file LoadedFile) DetectColumnTypes() {
 		}
 		columnName := "column_" + strconv.Itoa(i)
 		if thisColumnHeaders {
-			columnName = file.data[0][i]
+			columnName = file.Data[0][i]
 		}
 
 		file.FileInfo.ColumnInfo[i] = ColumnInfo{
