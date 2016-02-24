@@ -130,12 +130,12 @@ func init() {
 		if err == nil {
 			return true, v
 		}
-		log.Printf("Parse %v as float failed - %v", d, err)
+		//log.Printf("Parse %v as float failed - %v", d, err)
 		v1, err := strconv.ParseInt(d, 10, 64)
 		if err == nil {
 			return true, v1
 		}
-		log.Printf("Parse %v as int failed - %v", d, err)
+		//log.Printf("Parse %v as int failed - %v", d, err)
 		return false, 0
 	}
 	detector[None] = func(d string) (bool, interface{}) {
@@ -179,7 +179,7 @@ func DetectType(d []string) (EntityType, bool, error) {
 				break
 			}
 		}
-		log.Printf("Try 1 %s as %v - %v", d, typeInfo, ok)
+		//log.Printf("Try 1 %s as %v - %v", d, typeInfo, ok)
 		if ok {
 			return typeInfo, thisHeaders, nil
 		}
@@ -198,7 +198,7 @@ func DetectType(d []string) (EntityType, bool, error) {
 				break
 			}
 		}
-		log.Printf("Try 2 %s as %v - %v", d[1:], typeInfo, ok)
+		//log.Printf("Try 2 %s as %v - %v", d[1:], typeInfo, ok)
 		if ok {
 			foundType = typeInfo
 			break
