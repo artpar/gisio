@@ -18,11 +18,18 @@ var r = /[iI]d[^a-zA-Z]*$/;
 
 function generateGraphs(data, columnName) {
   console.log("plot charts", columnName);
+
+
+
+  $("#selectedColumn").text(columnName)
+
+  reset();
   if (columnName.match(r) !== null) {
     return;
   }
 
-  reset();
+
+
   k_combinations(data.ColumnInfo, 1).filter(function (colInfo) {
     return colInfo.ColumnName == null || colInfo.ColumnName.match(r) == null;
   }).forEach(function (colInfo) {
@@ -120,7 +127,7 @@ function generateGraphs(data, columnName) {
                   }
                   f = appendAreaChart
                 }
-                var container = addContainer(h, w, colX.ColumnName + " vs. " + colY.ColumnName);
+                var container = addContainer(h, w, colY.ColumnName);
                 f(d, container, false)
               }
             })
@@ -166,7 +173,7 @@ function generateGraphs(data, columnName) {
                   f = appendPieChart
 
                 }
-                var container = addContainer(h, w, colX.ColumnName + " vs. " + colY.ColumnName);
+                var container = addContainer(h, w, colY.ColumnName);
                 console.log("chart 2 for " + colX.ColumnName + " vs. " + colY.ColumnName, d);
                 f(d, container, false)
               }

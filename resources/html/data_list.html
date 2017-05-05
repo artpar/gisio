@@ -1,10 +1,39 @@
 {{define "dataList"}}
 <html>
 
+
+<style>
+  body {
+    font-family: Menlo, Monaco, Consolas, monospace
+  }
+</style>
+
 <body>
-{{range .}}
-File <a href="/data/{{.Name}}/index.html">{{ .Name }}</a> - {{ .Size }} -- <a target="_blank" href="/data/{{.Name}}/info">Open</a> <br>
-{{end}}
+
+<table class="table">
+  <thead>
+  <tr>
+    <th>File</th>
+    <th>Size</th>
+    <th></th>
+  </tr>
+  </thead>
+  <tbody>
+
+  {{range .}}
+  <tr>
+    <td>
+      <a href="/data/{{.Name}}/index.html">{{ .Name }}</a>
+    </td>
+    <td>{{ .Size }}</td>
+    <td><small><a target="_blank" href="/data/{{.Name}}/info">metadata</a></small></td>
+  </tr>
+  {{end}}
+
+
+  </tbody>
+</table>
+
 
 </body>
 
