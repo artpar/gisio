@@ -1,6 +1,6 @@
 {{define "dataList"}}
 <html>
-{{template "header"}}
+
 <body>
 {{range .}}
 File <a href="/data/{{.Name}}/index.html">{{ .Name }}</a> - {{ .Size }} -- <a target="_blank" href="/data/{{.Name}}/info">Open</a> <br>

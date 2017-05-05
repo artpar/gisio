@@ -36,6 +36,8 @@ func init() {
 		"January 02, 2006",
 		"January 02",
 		"Jan 02",
+		"20060102",
+		"200601",
 		"06",
 		"2006",
 		"2006.0",
@@ -52,6 +54,7 @@ func init() {
 		"Mon Jan 02 15:04:05 -0700 2006",
 		"02 Jan 06 15:04 MST",
 		"02 Jan 06 15:04 -0700",
+		"2006-01-02 15:04:05",
 		"Monday, 02-Jan-06 15:04:05 MST",
 		"Mon, 02 Jan 2006 15:04:05 MST",
 		"Mon, 02 Jan 2006 15:04:05 -0700",
@@ -105,7 +108,7 @@ func GetDate(t1 string) (time.Time, string, error) {
 
 func GetDateTime(t string) (time.Time, string, error) {
 	for _, format := range dateTimeFormat {
-		// fmt.Printf("Testing %s with %s\n", t, format)
+		 //fmt.Printf("Testing datetime %s with %s\n", t, format)
 		t, err := time.Parse(format, t)
 		if err == nil {
 			return t, format, nil
