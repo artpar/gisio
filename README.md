@@ -8,7 +8,7 @@ Do you see a lot of CSVs around you but struggling your way to get the juice out
 
 ## Run
 
-``go run main.go```
+```go run main.go```
 
 - Put your CSV files inside the ```./data/``` folder
 - Open http://localhost:2299/
