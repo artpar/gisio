@@ -17,6 +17,6 @@ Just upload a CSV and get awesome stats
 - Put your CSV files inside the ```./data/``` folder
 - Open http://localhost:2299/
 
-- Click on a column name to see the graphs associated with that column
+- Click on a column name to see the graphs/charts associated with that column
 
 ## Work In Progress
