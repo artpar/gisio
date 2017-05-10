@@ -2,6 +2,8 @@
 
 Do you see a lot of CSVs around you but struggling your way to get the juice out of those ?
 
+![Gisio demo](https://raw.githubusercontent.com/artpar/gisio/master/resources/static/images/gisio.jpg)
+
 ## Build
 
 ```go get github.com/artpar/gisio```
