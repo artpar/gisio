@@ -2,6 +2,8 @@
 
 Do you see a lot of CSVs around you but struggling your way to get the juice out of those ?
 
+Just upload a CSV and get awesome stats
+
 ![Gisio demo](https://github.com/artpar/gisio/raw/master/resources/static/images/gisio.png)
 
 ## Build
