@@ -2,7 +2,7 @@
 
 Do you see a lot of CSVs around you but struggling your way to get the juice out of those ?
 
-![Gisio demo](https://raw.githubusercontent.com/artpar/gisio/master/resources/static/images/gisio.jpg)
+![Gisio demo](https://github.com/artpar/gisio/raw/master/resources/static/images/gisio.png)
 
 ## Build
 
