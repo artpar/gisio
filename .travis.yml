@@ -5,7 +5,7 @@ sudo: required
 services:
   - docker
 
-script: go get github.com/artpar/gisio &&go build  -ldflags '-linkmode external -extldflags -static -w' main.go -o main && docker build -t gisio/gisio .
+script: go get github.com/artpar/gisio && go build  -ldflags '-linkmode external -extldflags -static -w' main.go -o main && docker build -t gisio/gisio .
 
 
 after_success:
