@@ -5,8 +5,11 @@ WORKDIR /opt/gisio
 
 ADD main /opt/gisio/gisio
 RUN chmod +x /opt/gisio/gisio
-#ADD gomsweb/dist /opt/goms/gomsweb/dist
+ADD resources /opt/gisio/resources
+
+VOLUME /opt/gisio/data
+
 
 EXPOSE 2299
 
-ENTRYPOINT ["/opt/gisio/gisio"]
+ENTRYPOINT ["/opt/gisio/gisio", "data"]
