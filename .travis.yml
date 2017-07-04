@@ -1,0 +1,18 @@
+language: go
+
+sudo: required
+
+services:
+  - docker
+
+script: go get github.com/artpar/gisio && go build -o main && docker build -t gisio/gisio .
+
+
+after_success:
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker push gisio/gisio;
+    fi
+
+notifications:
+  email: false
